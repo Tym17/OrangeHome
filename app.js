@@ -6,6 +6,8 @@ const lessMiddleware = require('less-middleware');
 const logger = require('morgan');
 const { app, BrowserWindow } = require('electron');
 
+const RealTime = require('./websockets/realtime');
+
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const controllerRouter = require('./routes/controller');
@@ -90,3 +92,7 @@ app.on('activate', () => {
     createWindow();
   }
 });
+
+let socks = new RealTime();
+
+socks.start();

@@ -7,5 +7,9 @@
   <body>
     <h1><%= title %></h1>
     <p>init <%= title %> name <%= name %></p>
+    <script src="/javascripts/socket.io.js"></script>
+    <script>
+      let socket = io(window.location.hostname + ':8017');
+    </script>
   </body>
 </html>

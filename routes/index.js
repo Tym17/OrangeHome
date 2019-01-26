@@ -10,6 +10,6 @@ router.get('/', (req, res, next) => {
 /* GET Debug realtime */
 router.get('/debug', (req, res, next) => {
   res.render('debug', { title: 'WebSocket Debug' });
-})
+});
 
 module.exports = router;
