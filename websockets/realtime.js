@@ -4,30 +4,54 @@ module.exports = function () {
     this.app = require('http').createServer(this.handler);
     this.io = require('socket.io')(this.app);
     this.connectedSockets = [];
-    let me = this;
+    let self = this;
+    let lastId = 0;
+    this.clients = [];
 
     this.log = function(obj) {
         console.log(chalk.blue('[WS] ') + obj);
     };
 
     this.start = function() {
-        me.log('Starting socket.io ...');
+        self.log('Starting socket.io...');
 
-        me.app.listen(8017);
-        me.io.on('connection', me.connection);
-        me.log('... Started!');
+        self.app.listen(8017);
+        self.io.on('connection', self.connection);
+
+        self.log('...Started!');
     };
 
     this.connection = function(socket) {
-        me.connectedSockets.push(socket);
-        me.log('An user connected!');
-        let disco = me.disconnection(socket);
-        socket.on('disconnect', disco);
+        self.connectedSockets.push(socket);
+        self.log('An user connected!');
+        
+        socket.on('disconnect', self.disconnection(socket));
+        socket.on('join', self.join(socket));
     };
+    
+    this.join = function (socket) {
+        return data => {
+            self.io.emit('status', { 
+                nbPlayers: self.connectedSockets.length
+            });
+            console.log(data);
+            self.clients.push({
+                name: data.name,
+                id: lastId,
+                socket: socket.id
+            });
+            console.log(self.clients);
+            socket.emit('welcome', self.clients[self.clients.length - 1]);
+            self.log(`Sent a warm welcome to ${data.name}!`);
+            lastId++
+        };
+    }
 
     this.disconnection = function(socket) {
         return () => {
-            me.log('Disconnected');
+            self.clients = self.clients.filter(c => c.socket != socket.id);
+            self.connectedSockets = self.connectedSockets.filter(cs => cs.id != socket.id);
+            self.log('User disconnected');
         };
     }
 

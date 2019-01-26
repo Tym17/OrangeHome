@@ -1,11 +1,41 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>init <%= title %></p>
-  </body>
+
+<head>
+  <title>
+    <%= title %>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <script src="/javascripts/socket.io.js"></script>
+</head>
+
+<body>
+  <h1>
+    <%= title %>
+  </h1>
+  <p>Open your mobile phone's browser at one of the following addresses and follow the instructions.</p>
+  <p style="color: red">Your computer and connecting phone(s) need to be on the same network for the controllers to
+    connect.</p>
+  <ul>
+    <% ips.forEach(i => { %>
+    <li>http://
+      <%= i %>:3000/controller</li>
+    <% }); %>
+  </ul>
+  <p id="noplayer">You need at least one controller to play the game.</p>
+  <a href="/game/play" id="starter" class="hidden">Start Game</a>
+  <script>
+    let socket = io(window.location.hostname + ':8017');
+    socket.on('status', data => {
+      if (data.nbPlayers > 1) {
+        document.getElementById('starter').className = '';
+        document.getElementById('noplayer').className = 'hidden';
+      } else {
+        document.getElementById('noplayer').className = '';
+        document.getElementById('starter').className = 'hidden';
+      }
+    });
+  </script>
+</body>
+
 </html>

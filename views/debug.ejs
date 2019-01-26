@@ -1,11 +1,31 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-  </body>
+
+<head>
+  <title>
+    <%= title %>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+  <h1>
+    <%= title %>
+  </h1>
+  <p>init
+    <%= title %> name</p>
+  <ul id="msgs" style="width: 100%">
+
+  </ul>
+  <script src="/javascripts/socket.io.js"></script>
+  <script>
+    let socket = io(window.location.hostname + ':8017');
+    socket.on('inbound', msg => {
+      let li = document.createElement('li');
+      li.innerHTML = msg;
+      document.getElementById('msgs').appendChild(li);
+    });
+  </script>
+</body>
+
 </html>

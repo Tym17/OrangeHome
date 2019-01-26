@@ -3,13 +3,20 @@
   <head>
     <title><%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="/javascripts/socket.io.js"></script>
   </head>
   <body>
     <h1><%= title %></h1>
     <p>init <%= title %> name <%= name %></p>
-    <script src="/javascripts/socket.io.js"></script>
     <script>
       let socket = io(window.location.hostname + ':8017');
+      let me;
+
+      socket.emit('join', {name: '<%= name %>' });
+      socket.on('welcome', data => {
+        me = data;
+        console.log('I am ', me);
+      });
     </script>
   </body>
 </html>
