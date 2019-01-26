@@ -8,6 +8,8 @@ const { app, BrowserWindow } = require('electron');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+const controllerRouter = require('./routes/controller');
+const gameRouter = require('./routes/game');
 
 const exp = express();
 
@@ -24,6 +26,8 @@ exp.use(express.static(path.join(__dirname, 'public')));
 
 exp.use('/', indexRouter);
 exp.use('/users', usersRouter);
+exp.use('/controller', controllerRouter);
+exp.use('/game', gameRouter);
 
 // catch 404 and forward to error handler
 exp.use((req, res, next) => {
@@ -55,7 +59,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({ width: 800, height: 600 });
 
   // and load the index.html of the app.
-  mainWindow.loadURL('http://localhost:3000/');
+  mainWindow.loadURL('http://localhost:3000/game');
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
