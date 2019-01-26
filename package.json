@@ -8,6 +8,7 @@
     "lintfix": "./node_modules/eslint/bin/eslint.js --fix ."
   },
   "dependencies": {
+    "chalk": "^2.4.2",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "ejs": "~2.5.7",
