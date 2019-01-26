@@ -18,19 +18,34 @@
     connect.</p>
   <ul>
     <% ips.forEach(i => { %>
-    <li>http://
-      <%= i %>:3000/controller</li>
+    <li>http://<%= i %>:3000/controller</li>
     <% }); %>
+  </ul>
+  <p>Players connected:</p>
+  <ul id="plist">
+    <li style="color: red">There is no player connected.</li>
   </ul>
   <p id="noplayer">You need at least one controller to play the game.</p>
   <a href="/game/play" id="starter" class="hidden">Start Game</a>
   <script>
     let socket = io(window.location.hostname + ':8017');
+    let plist = document.getElementById('plist');
     socket.on('status', data => {
+      plist.innerHTML = '';
       if (data.nbPlayers > 1) {
         document.getElementById('starter').className = '';
         document.getElementById('noplayer').className = 'hidden';
+        console.log(data);
+        data.players.forEach(p => {
+          let el = document.createElement('li');
+          el.innerHTML = p.name;
+          plist.appendChild(el);
+        });
       } else {
+        let el = document.createElement('li');
+        el.innerHTML = 'There is no player connected.';
+        el.style = 'color: red';
+        plist.appendChild(el);
         document.getElementById('noplayer').className = '';
         document.getElementById('starter').className = 'hidden';
       }

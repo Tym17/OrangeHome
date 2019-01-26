@@ -8,11 +8,11 @@ module.exports = function () {
     let lastId = 0;
     this.clients = [];
 
-    this.log = function(obj) {
+    this.log = function (obj) {
         console.log(chalk.blue('[WS] ') + obj);
     };
 
-    this.start = function() {
+    this.start = function () {
         self.log('Starting socket.io...');
 
         self.app.listen(8017);
@@ -21,33 +21,32 @@ module.exports = function () {
         self.log('...Started!');
     };
 
-    this.connection = function(socket) {
+    this.connection = function (socket) {
         self.connectedSockets.push(socket);
         self.log('An user connected!');
-        
+
         socket.on('disconnect', self.disconnection(socket));
         socket.on('join', self.join(socket));
     };
-    
+
     this.join = function (socket) {
         return data => {
-            self.io.emit('status', { 
-                nbPlayers: self.connectedSockets.length
-            });
-            console.log(data);
             self.clients.push({
                 name: data.name,
                 id: lastId,
                 socket: socket.id
             });
-            console.log(self.clients);
             socket.emit('welcome', self.clients[self.clients.length - 1]);
             self.log(`Sent a warm welcome to ${data.name}!`);
             lastId++
+            self.io.emit('status', {
+                nbPlayers: self.connectedSockets.length,
+                players: self.clients.map(c => ({ name: c.name }))
+            });
         };
     }
 
-    this.disconnection = function(socket) {
+    this.disconnection = function (socket) {
         return () => {
             self.clients = self.clients.filter(c => c.socket != socket.id);
             self.connectedSockets = self.connectedSockets.filter(cs => cs.id != socket.id);
@@ -55,7 +54,7 @@ module.exports = function () {
         };
     }
 
-    this.handler = function(req, res) {
+    this.handler = function (req, res) {
         res.writeHead(200);
         res.end('');
     };
