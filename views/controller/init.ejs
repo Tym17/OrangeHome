@@ -3,9 +3,24 @@
   <head>
     <title><%= title %></title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
+    <style>
+    </style>
   </head>
   <body>
     <h1><%= title %></h1>
     <p>init <%= title %></p>
+    <label>
+        Nickname:
+        <input id="name" type="text" oninput="assembleLink()"/>
+    </label>
+    <a href="#" id="link" class="hidden">Join game.</a>
+    <script>
+        let assembleLink = () => {
+            let name = document.getElementById('name').value;
+            let eLink = document.getElementById('link');
+            eLink.className = name.length === 0 ? 'hidden' : '';
+            eLink.href = '/controller/' + name;
+        }
+    </script>
   </body>
 </html>
