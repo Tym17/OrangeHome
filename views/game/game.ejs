@@ -61,7 +61,6 @@
       const aboveLayer = map.createStaticLayer("details", tileset, 0, 0);
       const spawnPoint = map.findObject("spawn", obj => obj.name === "spawn");
 
-
       const camera = this.cameras.main;
       socket.emit('lead', {});
       let self = this;
