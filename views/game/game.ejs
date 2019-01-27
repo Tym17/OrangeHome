@@ -45,24 +45,34 @@
     }
 
     function create() {
-      const level = [
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-      ];
+      const map = this.make.tilemap({ key: "map" });
+      const tileset = map.addTilesetImage('mars', 'mars');
 
-      const map = this.make.tilemap({ data: level, tileWidth: 16, tileHeight: 16 });
-      const tiles = map.addTilesetImage('tilemap');
-      const layer = map.createStaticLayer(0, tiles, 0, 0);
+      const belowLayer = map.createStaticLayer("fixground", tileset, 0, 0);
+      const wallsLayer = map.createStaticLayer("walls", tileset, 0, 0);
+      const aboveLayer = map.createStaticLayer("details", tileset, 0, 0);
+      
+      wallsLayer.setCollisionBetween(0, 100);
+
+      const camera = this.cameras.main;
+
+      // Set up the arrows to control the camera
+      const cursors = this.input.keyboard.createCursorKeys();
+      controls = new Phaser.Cameras.Controls.FixedKeyControl({
+        camera: camera,
+        left: cursors.left,
+        right: cursors.right,
+        up: cursors.up,
+        down: cursors.down,
+        speed: 0.5
+      });
+
+      // Constrain the camera so that it isn't allowed to move outside the width/height of tilemap
+      camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     }
 
-    function update() {
+    function update(time, delta) {
+      controls.update(delta);
     }
 
   </script>
