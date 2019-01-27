@@ -7,6 +7,7 @@ module.exports = function () {
     let self = this;
     let lastId = 0;
     this.clients = [];
+    this.mainSocket = null;
 
     this.log = function (obj) {
         console.log(chalk.blue('[WS] ') + obj);
@@ -27,7 +28,27 @@ module.exports = function () {
 
         socket.on('disconnect', self.disconnection(socket));
         socket.on('join', self.join(socket));
+        socket.on('lead', self.takeLead(socket));
+        socket.on('move', self.move(socket));
     };
+
+    this.move = function (socket) {
+        return data => {
+            self.log(`${socket.id}: Moving... ${data}.`)
+            if (self.mainSocket !== null)
+            {
+                self.mainSocket.emit('move-usr', data);
+            }
+        }
+    }
+
+    this.takeLead = function (socket) {
+        return () => {
+            self.log(`${socket.id} took lead.`);
+            self.mainSocket = socket;
+            self.status();
+        };
+    }
 
     this.join = function (socket) {
         return data => {
@@ -39,10 +60,7 @@ module.exports = function () {
             socket.emit('welcome', self.clients[self.clients.length - 1]);
             self.log(`Sent a warm welcome to ${data.name}!`);
             lastId++
-            self.io.emit('status', {
-                nbPlayers: self.connectedSockets.length,
-                players: self.clients.map(c => ({ name: c.name }))
-            });
+            self.status();
         };
     }
 
@@ -52,6 +70,13 @@ module.exports = function () {
             self.connectedSockets = self.connectedSockets.filter(cs => cs.id != socket.id);
             self.log('User disconnected');
         };
+    }
+
+    this.status = function () {
+        self.io.emit('status', {
+            nbPlayers: self.connectedSockets.length,
+            players: self.clients.map(c => ({ name: c.name, socket: c.socket }))
+        });
     }
 
     this.handler = function (req, res) {

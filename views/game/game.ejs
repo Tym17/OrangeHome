@@ -6,6 +6,7 @@
     <%= title %>
   </title>
   <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+  <script src="/javascripts/socket.io.js"></script>
   <style type="text/css">
     body {
       margin: 0;
@@ -16,18 +17,19 @@
 <body>
 
   <script>
+    let socket = io(window.location.hostname + ':8017');
 
-    var config = {
+    let config = {
       type: Phaser.AUTO,
-      width: 800,
-      height: 600,
+      width: 400,
+      height: 300,
       zoom: 2,
       pixelArt: true,
-      Physics: {
+      physics: {
         default: 'arcade',
         arcade: {
           gravity: { y: 0 },
-          debug: true
+          debug: false
         }
       },
       scene: {
@@ -37,7 +39,13 @@
       }
     };
 
-    var game = new Phaser.Game(config);
+    let game = new Phaser.Game(config);
+    let player;
+    let cursors;
+    const speed = 50;
+    let players = [];
+    const drag = 1;
+    let solarPanels = [];
 
     function preload() {
       this.load.spritesheet('mars', '/images/mars.png', { frameWidth: 16, frameHeight: 16 });
@@ -51,13 +59,85 @@
       const belowLayer = map.createStaticLayer("fixground", tileset, 0, 0);
       const wallsLayer = map.createStaticLayer("walls", tileset, 0, 0);
       const aboveLayer = map.createStaticLayer("details", tileset, 0, 0);
-      
-      wallsLayer.setCollisionBetween(0, 100);
+      const spawnPoint = map.findObject("spawn", obj => obj.name === "spawn");
+
 
       const camera = this.cameras.main;
+      socket.emit('lead', {});
+      let self = this;
+      socket.on('status', data => {
+        data.players.forEach(p => {
+          let n = players.push(self.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'mars')) - 1;
+          if (n == 0) {
+            camera.startFollow(players[n]);
+          }
+          self.physics.add.collider(players[n], wallsLayer);
+          players[n].netw = p
+          players[n].setDepth(5);
+        });
+        console.log(players);
+      });
+
+      socket.on('move-usr', data => {
+        let selPlayer = players.filter(p => p.netw.socket === data.self.socket)[0];
+        console.log('moving...', selPlayer);
+        if (data.dir == 'left') {
+          selPlayer.body.setVelocityX(-100);
+        } else if (data.dir == 'right') {
+          selPlayer.body.setVelocityX(100);
+        }
+
+        // Vertical movement
+        if (data.dir == 'up') {
+          selPlayer.body.setVelocityY(-100);
+        } else if (data.dir == 'down') {
+          selPlayer.body.setVelocityY(100);
+        }
+      });
+
+
+      this.anims.create({
+        key: 'idle',
+        frames: [{ key: 'mars', frame: 48 }],
+        frameRate: 1,
+      });
+      this.anims.create({
+        key: 'dead',
+        frames: [{ key: 'mars', frame: 51 }, { key: 'mars', frame: 65 }],
+        frameRate: 5,
+        repeat: -1
+      });
+      this.anims.create({
+        key: 'walk_front',
+        frames: [{ key: 'mars', frame: 62 }, { key: 'mars', frame: 48 }, { key: 'mars', frame: 76 }],
+        frameRate: 10,
+        repeat: -1
+      });
+      this.anims.create({
+        key: 'walk_back',
+        frames: [{ key: 'mars', frame: 63 }, { key: 'mars', frame: 49 }, { key: 'mars', frame: 77 }],
+        frameRate: 10,
+        repeat: -1
+      });
+      this.anims.create({
+        key: 'walk_left',
+        frames: [{ key: 'mars', frame: 61 }, { key: 'mars', frame: 47 }, { key: 'mars', frame: 75 }],
+        frameRate: 10,
+        repeat: -1
+      });
+      this.anims.create({
+        key: 'walk_right',
+        frames: [{ key: 'mars', frame: 64 }, { key: 'mars', frame: 50 }, { key: 'mars', frame: 78 }],
+        frameRate: 10,
+        repeat: -1
+      });
+
+      aboveLayer.setDepth(10);
+
+      wallsLayer.setCollisionBetween(0, 100);
 
       // Set up the arrows to control the camera
-      const cursors = this.input.keyboard.createCursorKeys();
+      cursors = this.input.keyboard.createCursorKeys();
       controls = new Phaser.Cameras.Controls.FixedKeyControl({
         camera: camera,
         left: cursors.left,
@@ -68,11 +148,59 @@
       });
 
       // Constrain the camera so that it isn't allowed to move outside the width/height of tilemap
-      camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     }
 
     function update(time, delta) {
-      controls.update(delta);
+      players.forEach(p => {
+        let normalX = p.body.velocity.x < 0 ? -p.body.velocity.x : p.body.velocity.x;
+        let normalY = p.body.velocity.y < 0 ? -p.body.velocity.y : p.body.velocity.y;
+        let animToPlay = 'idle';
+        let biggestNormal = 'none';
+        if (normalX + normalY != 0) {
+          biggestNormal = normalX > normalY ? 'x' : 'y';
+        } else {
+          p.anims.play('idle', true);
+        }
+        if (p.body.velocity.x != 0) {
+          if (p.body.velocity.x < 0) {
+            if (biggestNormal === 'x') {
+              p.anims.play('walk_left', true);
+            }
+            let nvel = p.body.velocity.x + drag;
+            p.body.setVelocityX(nvel > 0 ? 0 : nvel);
+          } else if (p.body.velocity.x > 0) {
+            if (biggestNormal === 'x') {
+              p.anims.play('walk_right', true);
+            }
+            let nvel = p.body.velocity.x - drag;
+            p.body.setVelocityX(nvel < 0 ? 0 : nvel);
+          }
+        }
+        if (p.body.velocity.y != 0) {
+          if (p.body.velocity.y < 0) {
+            if (biggestNormal === 'y') {
+              p.anims.play('walk_back', true);
+            }
+            let nvel = p.body.velocity.y + drag;
+            p.body.setVelocityY(nvel > 0 ? 0 : nvel);
+          } else if (p.body.velocity.y > 0) {
+            if (biggestNormal === 'y') {
+              p.anims.play('walk_front', true);
+            }
+            let nvel = p.body.velocity.y - drag;
+            p.body.setVelocityY(nvel < 0 ? 0 : nvel);
+          }
+        }
+        //p.body.velocity.normalize().scale(speed);
+      })
+      //controls.update(delta);
+      // Stop any previous movement from the last frame
+      //player.body.setVelocity(0);
+
+      // Horizontal movement
+
+
+      // Normalize and scale the velocity so that player can't move faster along a diagonal
     }
 
   </script>

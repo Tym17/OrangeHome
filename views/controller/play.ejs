@@ -1,22 +1,54 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-    <script src="/javascripts/socket.io.js"></script>
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>init <%= title %> name <%= name %></p>
-    <script>
-      let socket = io(window.location.hostname + ':8017');
-      let me;
 
-      socket.emit('join', {name: '<%= name %>' });
-      socket.on('welcome', data => {
-        me = data;
-        console.log('I am ', me);
-      });
-    </script>
-  </body>
+<head>
+  <title>
+    <%= title %>
+  </title>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+    crossorigin="anonymous">
+  <script src="/javascripts/socket.io.js"></script>
+</head>
+
+<body>
+  <div class="container half">
+    <div class="row">
+      <div class="col-xs-12 col-lg-12 col-md-12 paddy">
+        <button class="btn btn-block btn-warning mybutton" onclick="move(true)('up')">UP</button>
+      </div>
+      <div class="col-xs-6 col-lg-6 col-md-6 col-sm-6 paddy">
+        <button class="btn btn-block btn-warning mybutton" onclick="move(true)('left')">LEFT</button>
+      </div>
+      <div class="col-xs-6 col-lg-6 col-md-6 col-sm-6 paddy">
+          <button class="btn btn-block btn-warning mybutton" onclick="move(true)('right')">RIGHT</button>
+        </div>
+      <div class="col-xs-12 col-lg-12 col-md-12 paddy">
+        <button class="btn btn-block btn-warning mybutton" onclick="move(true)('down')">DOWN</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let socket = io(window.location.hostname + ':8017');
+    let me;
+
+    socket.emit('join', { name: '<%= name %>' });
+    socket.on('welcome', data => {
+      me = data;
+      console.log('I am ', me);
+    });
+
+    let move = start => {
+      return dir => {
+        socket.emit('move', {
+          self: me,
+          dir: dir,
+          start: start
+        });
+      };
+    };
+  </script>
+</body>
+
 </html>
