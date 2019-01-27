@@ -40,7 +40,8 @@
     var game = new Phaser.Game(config);
 
     function preload() {
-      this.load.spritesheet('tilemap', '/images/tilemap_packed.png', { frameWidth: 16, frameHeight: 16 });
+      this.load.spritesheet('mars', '/images/mars.png', { frameWidth: 16, frameHeight: 16 });
+      this.load.tilemapTiledJSON("map", "../maps/base.json");
     }
 
     function create() {
