@@ -2,8 +2,12 @@
   "name": "orangehome",
   "version": "0.0.0",
   "private": true,
+  "config": {
+    "nogui": "true"
+  },
   "scripts": {
     "start": "electron ./bin/www",
+    "nogui": "node ./bin/www",
     "lint": "./node_modules/eslint/bin/eslint.js .",
     "lintfix": "./node_modules/eslint/bin/eslint.js --fix ."
   },
