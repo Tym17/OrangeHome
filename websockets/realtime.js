@@ -34,11 +34,18 @@ module.exports = function () {
 
     this.move = function (socket) {
         return data => {
-            self.log(`${socket.id}: Moving... ${data}.`)
+            self.log(`${socket.id}: Moving...`)
             if (self.mainSocket !== null)
             {
                 self.mainSocket.emit('move-usr', data);
             }
+        }
+    }
+
+    this.newComer = function (client) {
+        if (self.mainSocket !== null)
+        {
+            self.mainSocket.emit('new-usr', client);
         }
     }
 
@@ -61,12 +68,16 @@ module.exports = function () {
             self.log(`Sent a warm welcome to ${data.name}!`);
             lastId++
             self.status();
+            self.newComer(self.clients[self.clients.length - 1]);
         };
     }
 
     this.disconnection = function (socket) {
         return () => {
-            self.clients = self.clients.filter(c => c.socket != socket.id);
+            if (self.mainSocket !== null) {
+                self.mainSocket.emit('quit-usr', self.clients.filter(c => c.socket === socket.id)[0]);
+            }
+            self.clients = self.clients.filter(c => c.socket !== socket.id);
             self.connectedSockets = self.connectedSockets.filter(cs => cs.id != socket.id);
             self.log('User disconnected');
         };

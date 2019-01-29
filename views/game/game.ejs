@@ -46,6 +46,7 @@
     let players = [];
     const drag = 1;
     let solarPanels = [];
+    let cameraLead = 'none';
 
     function preload() {
       this.load.spritesheet('mars', '/images/mars.png', { frameWidth: 16, frameHeight: 16 });
@@ -66,12 +67,17 @@
       let self = this;
       socket.on('status', data => {
         data.players.forEach(p => {
+          if (players.length !== 0) {
+            return;
+          }
+
           let n = players.push(self.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'mars')) - 1;
           if (n == 0) {
             camera.startFollow(players[n]);
+            cameraLead = p.socket;
           }
           self.physics.add.collider(players[n], wallsLayer);
-          players[n].netw = p
+          players[n].netw = p;
           players[n].setDepth(5);
         });
         console.log(players);
@@ -94,6 +100,22 @@
         }
       });
 
+      socket.on('quit-usr', data => {
+        console.log(data);
+        players.filter(p => p.netw.socket === data.socket)[0].setDepth(-10);
+        players = players.filter(p => p.netw.socket !== data.socket);
+        if (cameraLead === data.socket) {
+          camera.startFollow(players[0]);
+          cameraLead = players[0].netw.socket;
+        }
+      });
+
+      socket.on('new-usr', data => {
+        let np = players.push(self.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'mars')) - 1;
+        self.physics.add.collider(players[np], wallsLayer);
+        players[np].netw = data;
+        players[np].setDepth(5);
+      });
 
       this.anims.create({
         key: 'idle',
