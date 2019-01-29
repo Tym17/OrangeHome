@@ -10,7 +10,8 @@ module.exports = function () {
     this.mainSocket = null;
 
     this.log = function (obj) {
-        console.log(chalk.blue('[WS] ') + obj);
+        let d = new Date();
+        console.log(`[${d.getDate()}/${d.getMonth() + 1}  ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}]` + chalk.blue('[WS] ') + obj);
     };
 
     this.start = function () {
@@ -65,7 +66,9 @@ module.exports = function () {
                 socket: socket.id
             });
             socket.emit('welcome', self.clients[self.clients.length - 1]);
+            self.log(`==========================================================`);
             self.log(`Sent a warm welcome to ${data.name}!`);
+            self.log(`==========================================================`);
             lastId++
             self.status();
             self.newComer(self.clients[self.clients.length - 1]);
@@ -74,12 +77,13 @@ module.exports = function () {
 
     this.disconnection = function (socket) {
         return () => {
+            let leaving = self.clients.filter(c => c.socket === socket.id)[0]
             if (self.mainSocket !== null) {
-                self.mainSocket.emit('quit-usr', self.clients.filter(c => c.socket === socket.id)[0]);
+                self.mainSocket.emit('quit-usr', leaving);
             }
             self.clients = self.clients.filter(c => c.socket !== socket.id);
             self.connectedSockets = self.connectedSockets.filter(cs => cs.id != socket.id);
-            self.log('User disconnected');
+            self.log(`${leaving.name} disconnected.`);
         };
     }
 
