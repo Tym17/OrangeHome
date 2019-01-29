@@ -83,7 +83,7 @@ module.exports = function () {
             }
             self.clients = self.clients.filter(c => c.socket !== socket.id);
             self.connectedSockets = self.connectedSockets.filter(cs => cs.id != socket.id);
-            self.log(`${leaving.name} disconnected.`);
+            self.log(`An user disconnected.`);
         };
     }
 
